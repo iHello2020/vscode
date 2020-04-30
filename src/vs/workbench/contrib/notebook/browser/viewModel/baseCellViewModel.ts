@@ -59,6 +59,9 @@ export abstract class BaseCellViewModel extends Disposable implements ICellViewM
 
 		this._editState = newState;
 		this._onDidChangeState.fire({ editStateChanged: true });
+		if (this._editState === CellEditState.Preview) {
+			this.focusMode = CellFocusMode.Container;
+		}
 	}
 
 	// TODO - move any "run"/"status" concept to Code-specific places
@@ -81,8 +84,12 @@ export abstract class BaseCellViewModel extends Disposable implements ICellViewM
 		return this._focusMode;
 	}
 	set focusMode(newMode: CellFocusMode) {
+		const changed = this._focusMode !== newMode;
 		this._focusMode = newMode;
-		this._onDidChangeState.fire({ focusModeChanged: true });
+
+		if (changed) {
+			this._onDidChangeState.fire({ focusModeChanged: true });
+		}
 	}
 
 	protected _textEditor?: ICodeEditor;
@@ -168,7 +175,7 @@ export abstract class BaseCellViewModel extends Disposable implements ICellViewM
 	}
 
 	detachTextEditor() {
-		this._editorViewStates = this.saveViewState();
+		this.saveViewState();
 		// decorations need to be cleared first as editors can be resued.
 		this._resolvedDecorations.forEach(value => {
 			let resolvedid = value.id;
@@ -192,17 +199,19 @@ export abstract class BaseCellViewModel extends Disposable implements ICellViewM
 		return this.model.source.join('\n');
 	}
 
-	private saveViewState(): editorCommon.ICodeEditorViewState | null {
+	abstract save(): void;
+
+	private saveViewState(): void {
 		if (!this._textEditor) {
-			return null;
+			return;
 		}
 
-		return this._textEditor.saveViewState();
+		this._editorViewStates = this._textEditor.saveViewState();
 	}
 
 	saveEditorViewState() {
 		if (this._textEditor) {
-			this._editorViewStates = this.saveViewState();
+			this._editorViewStates = this._textEditor.saveViewState();
 		}
 
 		return this._editorViewStates;

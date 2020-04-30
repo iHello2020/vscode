@@ -1219,7 +1219,7 @@ export function registerTerminalActions() {
 		constructor() {
 			super({
 				id: TERMINAL_COMMAND_ID.FIND_NEXT,
-				title: localize('workbench.action.terminal.findNext', "Find next"),
+				title: localize('workbench.action.terminal.findNext', "Find Next"),
 				f1: true,
 				category,
 				keybinding: [
@@ -1245,7 +1245,7 @@ export function registerTerminalActions() {
 		constructor() {
 			super({
 				id: TERMINAL_COMMAND_ID.FIND_PREVIOUS,
-				title: localize('workbench.action.terminal.findPrevious', "Find previous"),
+				title: localize('workbench.action.terminal.findPrevious', "Find Previous"),
 				f1: true,
 				category,
 				keybinding: [
@@ -1278,6 +1278,19 @@ export function registerTerminalActions() {
 		}
 		run(accessor: ServicesAccessor) {
 			accessor.get(ITerminalService).getActiveInstance()?.relaunch();
+		}
+	});
+	registerAction2(class extends Action2 {
+		constructor() {
+			super({
+				id: TERMINAL_COMMAND_ID.SHOW_ENVIRONMENT_INFORMATION,
+				title: localize('workbench.action.terminal.showEnvironmentInformation', "Show Environment Information"),
+				f1: true,
+				category
+			});
+		}
+		run(accessor: ServicesAccessor) {
+			accessor.get(ITerminalService).getActiveInstance()?.showEnvironmentInfoHover();
 		}
 	});
 }

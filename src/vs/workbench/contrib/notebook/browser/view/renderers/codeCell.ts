@@ -69,15 +69,21 @@ export class CodeCell extends Disposable {
 			}
 		});
 
+		const updateForFocusMode = () => {
+			if (viewCell.focusMode === CellFocusMode.Editor) {
+				templateData.editor?.focus();
+			}
+
+			DOM.toggleClass(templateData.container, 'cell-editor-focus', viewCell.focusMode === CellFocusMode.Editor);
+		};
 		this._register(viewCell.onDidChangeState((e) => {
 			if (!e.focusModeChanged) {
 				return;
 			}
 
-			if (viewCell.focusMode === CellFocusMode.Editor) {
-				templateData.editor?.focus();
-			}
+			updateForFocusMode();
 		}));
+		updateForFocusMode();
 
 		templateData.editor?.updateOptions({ readOnly: !(viewCell.getEvaluatedMetadata(notebookEditor.viewModel?.metadata).editable) });
 		this._register(viewCell.onDidChangeState((e) => {
@@ -191,6 +197,17 @@ export class CodeCell extends Disposable {
 			}
 		}));
 
+		const updateFocusMode = () => viewCell.focusMode = templateData.editor!.hasWidgetFocus() ? CellFocusMode.Editor : CellFocusMode.Container;
+		this._register(templateData.editor!.onDidFocusEditorWidget(() => {
+			updateFocusMode();
+		}));
+
+		this._register(templateData.editor!.onDidBlurEditorWidget(() => {
+			updateFocusMode();
+		}));
+
+		updateFocusMode();
+
 		if (viewCell.outputs.length > 0) {
 			let layoutCache = false;
 			if (this.viewCell.layoutInfo.totalHeight !== 0 && this.viewCell.layoutInfo.totalHeight > totalHeight) {
@@ -269,7 +286,7 @@ export class CodeCell extends Disposable {
 				const mimeTypePicker = DOM.$('.multi-mimetype-output');
 				DOM.addClasses(mimeTypePicker, 'codicon', 'codicon-code');
 				mimeTypePicker.tabIndex = 0;
-				mimeTypePicker.title = nls.localize('mimeTypePicker', "Choose a different output mimetype");
+				mimeTypePicker.title = nls.localize('mimeTypePicker', "Choose a different output mimetype, available mimetypes: {0}", transformedDisplayOutput.orderedMimeTypes.map(mimeType => mimeType.mimeType).join(', '));
 				outputItemDiv.appendChild(mimeTypePicker);
 				this.outputResizeListeners.get(currOutput)!.add(DOM.addStandardDisposableListener(mimeTypePicker, 'mousedown', async e => {
 					if (e.leftButton) {
